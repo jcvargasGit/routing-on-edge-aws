@@ -1,0 +1,23 @@
+{
+  "name": "root",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^17.6.3",
+    "@commitlint/config-conventional": "^17.6.3",
+    "husky": "^8.0.3",
+    "lerna": "^6.6.2",
+    "lint-staged": "^13.2.2"
+  },
+  "scripts": {
+    "test": "npx lerna run test --stream",
+    "dev": "npx lerna run dev --stream",
+    "build": "npx lerna run build --stream"
+  },
+  "engines": {
+    "node": "18.0.0"
+  }
+}

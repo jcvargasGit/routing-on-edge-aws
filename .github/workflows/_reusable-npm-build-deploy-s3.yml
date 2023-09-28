@@ -1,0 +1,62 @@
+name: Reusable workflow for mfe single page apps
+run-name: mfe workflow template
+
+on:
+  workflow_call:
+    inputs:
+      mfe_name:
+        required: true
+        type: string
+      node_version:
+        required: false
+        type: string
+        default: "18"
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            mfe: 
+              - 'packages/mfe-${{ inputs.mfe_name }}/**'
+
+      - name: Setup Node.js
+        if: steps.changes.outputs.mfe == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{inputs.node_version}}
+
+      - name: Install dependencies and build
+        if: steps.changes.outputs.mfe == 'true'
+        run: |
+          cd ./packages/mfe-${{inputs.mfe_name}}
+          npm ci
+          CDN_URL=${{vars.CDN_URL}}/mfe/${{inputs.mfe_name}} npm run build 
+
+      - name: Upload build artifact
+        if: steps.changes.outputs.mfe == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{inputs.mfe_name}}
+          path: ./packages/mfe-${{inputs.mfe_name}}/dist
+          if-no-files-found: error
+
+      - name: Setup AWS CLI
+        if: steps.changes.outputs.mfe == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Uploading Static pages to S3
+        if: steps.changes.outputs.mfe == 'true'
+        run: |
+          aws s3 sync ./packages/mfe-${{inputs.mfe_name}}/dist s3://${{vars.S3_BUCKET_NAME}}/mfe/${{inputs.mfe_name}} --delete
+          aws cloudfront create-invalidation --distribution-id ${{vars.CF_DISTRIBUTION_RESOURCES}} --paths "/mfe/${{inputs.mfe_name}}/*"
+

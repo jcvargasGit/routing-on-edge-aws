@@ -1,0 +1,27 @@
+name: Reusable workflow for uploading file to S3
+run-name: uploading file to s3
+
+on:
+  workflow_call:
+    inputs:
+      file_to_upload:
+        required: true
+        type: string
+
+jobs:
+  upload-to-s3:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Uploading catalog to S3
+      run: |
+        aws s3 sync ${{ inputs.file_to_upload }} s3://${{vars.S3_BUCKET_NAME}}/routes/
+        aws cloudfront create-invalidation --distribution-id ${{vars.CF_DISTRIBUTION_RESOURCES}} --paths "/routes/*"
+        

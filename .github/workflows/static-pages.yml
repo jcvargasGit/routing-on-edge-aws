@@ -1,0 +1,29 @@
+name: Upload static pages to S3
+run-name: 📄 ${{ github.actor }} is uploading static pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/vanilla/**'
+      - '.github/workflows/static-pages.yml'
+
+jobs:
+  upload-to-s3:
+    env:
+      S3_BUCKET_NAME: "us-east-1-856716035894-mfe-on-the-edge"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Uploading Static pages to S3
+        run: |
+          aws s3 sync ./packages/vanilla s3://${{vars.S3_BUCKET_NAME}}/vanilla/ --delete
+          aws cloudfront create-invalidation --distribution-id ${{vars.CF_DISTRIBUTION_RESOURCES}} --paths "/vanilla/*"

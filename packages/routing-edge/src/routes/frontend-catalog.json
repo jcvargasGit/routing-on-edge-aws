@@ -1,0 +1,18 @@
+{
+  "/index.html": {
+    "originDomain": "d1wub6s1ympoc5.cloudfront.net", 
+    "uri": "/mfe/vue/index.html"
+  },
+  "/react": {
+    "originDomain": "d1wub6s1ympoc5.cloudfront.net", 
+    "uri": "/mfe/react/index.html"
+  },
+  "/vanilla/mantainance": {
+    "originDomain": "d1wub6s1ympoc5.cloudfront.net", 
+    "uri": "/vanilla/mantainance/index.html"
+  },
+  "/vanilla/error": {
+    "originDomain": "d1wub6s1ympoc5.cloudfront.net", 
+    "uri": "/vanilla/error/index.html"
+  }
+}

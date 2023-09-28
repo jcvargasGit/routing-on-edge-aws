@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: This stack handles the micro-front storage with s3 bucket and cloudfront for distribution and a lambda edge for handling routings and flags
+  
+Globals:
+  Function:
+    Timeout: 3
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: views-gateway
+
+Resources:
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::Region}-${AWS::AccountId}-${BucketName}'
+
+  S3BucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Id: S3BucketPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: "Grant CloudFront access to the bucket"
+            Effect: Allow
+            Action: "s3:GetObject"
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Resource:
+              - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, "/*"]]
+
+  CFDistribution:
+      Type: AWS::CloudFront::Distribution
+      DependsOn:
+        - CloudFrontOAI
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          Comment: !Sub '${BucketName}-CFDistribution'
+          DefaultRootObject: index.html
+          PriceClass: PriceClass_All
+          CustomErrorResponses:
+            - ErrorCode: 400
+              ResponseCode: 400
+              ResponsePagePath: /index.html
+            - ErrorCode: 403
+              ResponseCode: 403
+              ResponsePagePath: /index.html
+          Origins:
+            - DomainName: !GetAtt S3Bucket.RegionalDomainName
+              Id: !Ref S3Bucket
+              S3OriginConfig:
+                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+          DefaultCacheBehavior:
+            ViewerProtocolPolicy: redirect-to-https
+            TargetOriginId: !Ref S3Bucket
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
+            ForwardedValues: 
+              QueryString: false 
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            LambdaFunctionAssociations:
+              - EventType: origin-request
+                LambdaFunctionARN: !Ref LambdaEdgeFunction.Version
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+            MinimumProtocolVersion: 'TLSv1.2_2021'
+
+# LambdaEdgeFunctionVersion:
+#   Type: AWS::Lambda::Version
+#   Properties:
+#     FunctionName: !Ref LambdaEdgeFunction
+
+  CloudFrontOAI:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    DependsOn:
+      - S3Bucket
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "Micro-frontend OAI"
+
+  LambdaEdgeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: live
+      CodeUri: src/handlers/
+      Handler: routing.handler
+      Runtime: nodejs18.x
+      MemorySize: 128
+      Timeout: 5
+      Role: !GetAtt LambdaEdgeRole.Arn
+
+  LambdaEdgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaEdgePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt S3Bucket.Arn
+                  - !Join
+                    - ""
+                    - - !GetAtt S3Bucket.Arn
+                      - "/*"
+

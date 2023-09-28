@@ -1,0 +1,21 @@
+name: Upload MFE to S3
+run-name: 🍕 ${{ github.actor }} is uploading a MFE app
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/mfe-*/**"
+
+jobs:
+  vue:
+    uses: "./.github/workflows/_reusable-npm-build-deploy-s3.yml"
+    with:
+      mfe_name: "vue"
+    secrets: inherit
+  react:
+    uses: "./.github/workflows/_reusable-npm-build-deploy-s3.yml"
+    with:
+      mfe_name: "react"
+    secrets: inherit

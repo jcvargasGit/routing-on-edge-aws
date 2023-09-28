@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Maintenance</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+
+        }
+        .maintenance-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 4rem;
+            height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo {
+            font-size: 3rem;
+            color: #ff3366;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin: 1rem 0;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #666;
+            margin: 1rem 0;
+        }
+        .illustration {
+            max-width: 100%;
+            height: auto;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav className="bg-gray-800 text-white p-4">
+        <a href="/shell"className="text-blue-500 hover:underline focus:underline focus:outline-none">Marvel</a>
+        <span className="mx-2 text-gray-400">|</span>
+        <a href="/shell/one-pice"className="text-blue-500 hover:underline focus:underline focus:outline-none">One Piece</a>
+        <span className="mx-2 text-gray-400">|</span>
+        <a href="/edge/pokemon" className="text-yellow-500 hover:underline focus:underline focus:outline-none">edge pokemon</a>
+        <span className="mx-2 text-gray-400">|</span>
+        <a href="/edge/rick-morty" className="text-yellow-500 hover:underline focus:underline focus:outline-none">edge rick-morty</a>
+        <span className="mx-2 text-gray-400">|</span>
+        <a href="/edge/vanilla" className="text-yellow-500 hover:underline focus:underline focus:outline-none">edge vanilla</a>
+    </nav>
+    <div class="maintenance-container">
+        <div class="logo">
+            <i class="fas fa-tools"></i> Maintenance Mode
+        </div>
+        <img src="./mantainance.jpeg" alt="Maintenance Image" class="illustration">
+        <h1>We're Currently Under Maintenance</h1>
+        <p>Sorry for the inconvenience, but we're working hard to improve our website. We'll be back online soon!</p>
+    </div>
+</body>
+</html>

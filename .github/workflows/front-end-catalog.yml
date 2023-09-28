@@ -1,0 +1,28 @@
+name: Upload catalog JSON to S3
+run-name: 📖 ${{ github.actor }} is uploading JSON catalog 
+on:
+  push:
+    branches:
+      - main 
+    paths:
+      - 'packages/routing-edge/src/routes/frontend-catalog.json'
+      - 'packages/mfe-shell/importmaps.json'
+      - '.github/workflows/front-end-catalog.yml'
+
+jobs:
+  upload-edge-catalog:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Uploading catalog to S3
+      run: |
+        cd ./packages/routing-edge/src/routes
+        aws s3 cp ./frontend-catalog.json s3://${{vars.S3_BUCKET_NAME}}/routes/
+        aws cloudfront create-invalidation --distribution-id ${{vars.CF_DISTRIBUTION_RESOURCES}} --paths "/routes/*"
