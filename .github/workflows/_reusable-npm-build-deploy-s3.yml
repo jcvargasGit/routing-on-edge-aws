@@ -36,7 +36,7 @@ jobs:
         run: |
           cd ./packages/mfe-${{inputs.mfe_name}}
           npm ci
-          CDN_URL=${{vars.CDN_URL}}/mfe/${{inputs.mfe_name}} npm run build 
+          VITE_CDN_URL=${{vars.CDN_URL}} npm run build 
 
       - name: Upload build artifact
         if: steps.changes.outputs.mfe == 'true'

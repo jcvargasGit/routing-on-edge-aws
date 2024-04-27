@@ -11,8 +11,8 @@ import HelloWorld from './components/HelloWorld.vue'
       <HelloWorld msg="MFE on the edge" />
 
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/router/vue/about">About</RouterLink>
+        <RouterLink :to="{ name: 'home' }">Home</RouterLink>
+        <RouterLink :to="{ name: 'about' }">About</RouterLink>
       </nav>
     </div>
   </header>

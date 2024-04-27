@@ -13,6 +13,6 @@ export default ({ mode }: { mode: any }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       }
     },
-    base: `${process.env.CDN_URL}`
+    base: `${process.env.VITE_CDN_URL}`
   })
 }
