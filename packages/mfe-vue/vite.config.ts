@@ -12,6 +12,10 @@ export default ({ mode }: { mode: any }) => {
       vue(),
       transformHtmlPlugin([
         {
+          replace: './favicon.ico',
+          value: `${process.env.VITE_CDN_URL}/mfe/vue/favicon.ico`
+        },
+        {
           replace: './assets/index.js',
           value: `${process.env.VITE_CDN_URL}/mfe/vue/assets/index.js`
         },
