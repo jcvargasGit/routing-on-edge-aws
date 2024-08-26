@@ -13,7 +13,7 @@
   },
   "scripts": {
     "eslint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check",
-    "lint": "eslint .",
+    "lint": "npm run lint:fix",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --write '**/*.{mjs,js,json}'",
     "test": "REMOVE_LOGS=true c8 mocha ./test/**/*.test.js",
@@ -22,11 +22,14 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.4",
+    "@eslint/js": "^9.9.1",
     "c8": "^7.13.0",
     "chai": "^4.3.4",
+    "eslint": "^9.9.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
+    "globals": "^15.9.0",
     "lambda-event-mock": "^1.5.0",
     "lambda-tester": "^4.0.1",
     "mocha": "^10.7.3",
@@ -34,8 +37,5 @@
     "prettier": "^2.5.1",
     "sinon": "^12.0.1",
     "testdouble": "^3.18.0"
-  },
-  "engines": {
-    "node": "18.0.0"
   }
 }

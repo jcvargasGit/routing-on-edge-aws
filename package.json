@@ -16,7 +16,9 @@
   "scripts": {
     "test": "npx lerna run test --stream",
     "dev": "npx lerna run dev --stream",
-    "build": "npx lerna run build --stream"
+    "build": "npx lerna run build --stream",
+    "lint": "npx lerna run lint --stream",
+    "pre-commit": "lint-staged"
   },
   "engines": {
     "node": "18.0.0"

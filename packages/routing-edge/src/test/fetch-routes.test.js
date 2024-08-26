@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { fetchAsJson, fetchLocalJSON } from "../utils/fetch-routes.js";
+import { fetchAsJson } from "../utils/fetch-routes.js";
 import sinon from "sinon";
 import fetch from "node-fetch";
 
