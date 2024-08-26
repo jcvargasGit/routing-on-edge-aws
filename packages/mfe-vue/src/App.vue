@@ -5,7 +5,7 @@ import HelloWorld from './components/HelloWorld.vue'
 
 <template>
   <nav class="main-nav">
-    <a href="/" target="_blank" rel="noopener">Back</a>
+    <a href="/">Back</a>
     <div>
       <RouterLink :to="{ name: 'home' }">Home</RouterLink>
       <RouterLink :to="{ name: 'about' }">About</RouterLink>

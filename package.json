@@ -3,14 +3,15 @@
   "private": true,
   "type": "module",
   "workspaces": [
+    "packages/routing-edge/*",
     "packages/*"
   ],
   "devDependencies": {
     "@commitlint/cli": "^17.6.3",
     "@commitlint/config-conventional": "^17.6.3",
-    "husky": "^8.0.3",
-    "lerna": "^6.6.2",
-    "lint-staged": "^13.2.2"
+    "husky": "^9.0.0",
+    "lerna": "^8.0.0",
+    "lint-staged": "^15.0.0"
   },
   "scripts": {
     "test": "npx lerna run test --stream",

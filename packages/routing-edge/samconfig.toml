@@ -17,6 +17,10 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
+s3_prefix = "mfe-on-the-edge"
+region = "us-east-1"
+parameter_overrides = "BucketName=\"mfe-on-the-edge\" Timeout=\"5\" Runtime=\"nodejs18.x\" PriceClass=\"PriceClass_100\" MinimumProtocolVersion=\"TLSv1.2_2021\" Environment=\"dev\" Owner=\"jcvargas\" Project=\"MicroFrontends\" Application=\"RoutingOnTheEdge\" CostCenter=\"Tutorials\""
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true

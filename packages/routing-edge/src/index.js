@@ -6,7 +6,6 @@ import {
   fetchLocalJSON,
 } from "./utils/fetch-routes.js";
 
-let frontEndCatalog = null;
 export const CDN_CATALOG_URI = "https://d1wub6s1ympoc5.cloudfront.net/routes/frontend-catalog.json";
 
 export const handler = async (event) => {
@@ -25,11 +24,7 @@ export const handler = async (event) => {
 };
 
 async function getFrontendCatalog() {
-  //This lines are commented for example purposes, uncomment them to use the CDN
-  // if (frontEndCatalog) {
-  //   return frontEndCatalog;
-  // }
-  frontEndCatalog =
+  const frontEndCatalog =
     await fetchCatalogFile(CDN_CATALOG_URI) ||
     fetchLocalJSON("../routes/frontend-catalog.json");
   return frontEndCatalog;

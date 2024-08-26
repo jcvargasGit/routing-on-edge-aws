@@ -1,7 +1,7 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: This stack handles the micro-front storage with s3 bucket and cloudfront for distribution and a lambda edge for handling routings and flags
-  
+
 Globals:
   Function:
     Timeout: 3
@@ -12,34 +12,85 @@ Parameters:
     Default: mfe-on-the-edge
   MemorySize:
     Type: Number
-    Default: 128
+    Default: "128"
+    AllowedValues:
+      - "128"
+      - "256"
+      - "512"
   Timeout:
     Type: Number
-    Default: 5
+    Default: "5"
   Runtime:
     Type: String
     Default: nodejs18.x
+  PriceClass:
+    Type: String
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
+  MinimumProtocolVersion:
+    Type: String
+    Default: "TLSv1.2_2021"
+    AllowedValues:
+      - TLSv1.2_2021
+      - TLSv1.1_2016
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+  Owner:
+    Type: String
+    Default: jcvargas
+  Project:
+    Type: String
+    Default: MicroFrontends
+  Application:
+    Type: String
+    Default: RoutingOnTheEdge
+  CostCenter:
+    Type: String
+    Default: Tutorials
 
 Resources:
-
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::Region}-${AWS::AccountId}-${BucketName}'
+      BucketName: !Sub "${AWS::Region}-${AWS::AccountId}-${BucketName}"
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ["*"]
             AllowedMethods: ["GET", "POST", "PUT", "DELETE"]
             AllowedOrigins: ["*"]
             MaxAge: 3000
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Application
+          Value: !Ref Application
+        - Key: CostCenter
+          Value: !Ref CostCenter
 
   S3BucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
       Bucket: !Ref S3Bucket
       PolicyDocument:
-        Id: S3BucketPolicy
         Version: 2012-10-17
+        Id: S3BucketPolicy
         Statement:
           - Sid: "Grant CloudFront access to the bucket"
             Effect: Allow
@@ -47,82 +98,104 @@ Resources:
             Principal:
               CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
             Resource:
-              - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, "/*"]]
+              - !Join ["", ["arn:aws:s3:::", !Ref S3Bucket, "/*"]]
 
   CFDistributionForStatics:
-      Type: AWS::CloudFront::Distribution
-      DependsOn:
-        - CloudFrontOAI
-      Properties:
-        DistributionConfig:
-          Enabled: true
-          Comment: !Sub '${BucketName} serves to access static files from edge'
-          PriceClass: PriceClass_100
-          Origins:
-            - DomainName: !GetAtt S3Bucket.RegionalDomainName
-              Id: !Ref S3Bucket
-              S3OriginConfig:
-                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
-          DefaultCacheBehavior:
-            ViewerProtocolPolicy: redirect-to-https
-            TargetOriginId: !Ref S3Bucket
-            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
-            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
-            ForwardedValues: 
-              QueryString: false 
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-            MinimumProtocolVersion: 'TLSv1.2_2021'
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - CloudFrontOAI
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${BucketName} serves to access static files from edge"
+        PriceClass: !Ref PriceClass
+        Origins:
+          - DomainName: !GetAtt S3Bucket.RegionalDomainName
+            Id: !Ref S3Bucket
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: !Ref S3Bucket
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
+          ForwardedValues:
+            QueryString: false
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: !Ref MinimumProtocolVersion
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Application
+          Value: !Ref Application
+        - Key: CostCenter
+          Value: !Ref CostCenter
 
   CFDistributionForTheEdge:
-      Type: AWS::CloudFront::Distribution
-      DependsOn:
-        - CloudFrontOAI
-      Properties:
-        DistributionConfig:
-          Enabled: true
-          Comment: !Sub '${BucketName} is the entry to be handled by lambda@edge'
-          DefaultRootObject: index.html
-          PriceClass: PriceClass_100
-          CustomErrorResponses:
-            - ErrorCode: 400
-              ResponseCode: 400
-              ResponsePagePath: /pages/error/index.html
-            - ErrorCode: 403
-              ResponseCode: 403
-              ResponsePagePath: /pages/error/index.html
-            - ErrorCode: 404
-              ResponseCode: 404
-              ResponsePagePath: /pages/error/index.html
-            - ErrorCode: 500
-              ResponseCode: 500
-              ResponsePagePath: /pages/error/index.html
-          Origins:
-            - DomainName: !GetAtt S3Bucket.RegionalDomainName
-              Id: !Ref S3Bucket
-              S3OriginConfig:
-                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
-          DefaultCacheBehavior:
-            ViewerProtocolPolicy: redirect-to-https
-            TargetOriginId: !Ref S3Bucket
-            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # CachingOptimized
-            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
-            ForwardedValues: 
-              QueryString: false 
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-            LambdaFunctionAssociations:
-              - EventType: origin-request
-                LambdaFunctionARN: !Ref LambdaEdgeFunction.Version
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-            MinimumProtocolVersion: 'TLSv1.2_2021'
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - CloudFrontOAI
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${BucketName} is the entry to be handled by lambda@edge"
+        DefaultRootObject: index.html
+        PriceClass: !Ref PriceClass
+        CustomErrorResponses:
+          - ErrorCode: 400
+            ResponseCode: 400
+            ResponsePagePath: /pages/error/index.html
+          - ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: /pages/error/index.html
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /pages/error/index.html
+          - ErrorCode: 500
+            ResponseCode: 500
+            ResponsePagePath: /pages/error/index.html
+        Origins:
+          - DomainName: !GetAtt S3Bucket.RegionalDomainName
+            Id: !Ref S3Bucket
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: !Ref S3Bucket
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # CORS-S3Origin
+          ForwardedValues:
+            QueryString: false
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              LambdaFunctionARN: !Ref LambdaEdgeFunction.Version
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: !Ref MinimumProtocolVersion
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref Project
+        - Key: Owner
+          Value: !Ref Owner
+        - Key: Application
+          Value: !Ref Application
+        - Key: CostCenter
+          Value: !Ref CostCenter
 
   CloudFrontOAI:
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
@@ -167,20 +240,23 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: arn:aws:logs:*:*:*
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
               - Effect: Allow
                 Action:
                   - s3:GetObject
-                  - s3:PutObject
-                  - s3:ListBucket
                 Resource:
-                  - !Join
-                    - ""
-                    - - arn:aws:s3:::
-                      - !Ref S3Bucket
-                  - !Join
-                    - ""
-                    - - arn:aws:s3:::
-                      - !Ref S3Bucket
-                      - "/*"
+                  - !Sub "arn:aws:s3:::${S3Bucket}"
+                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
 
+Outputs:
+  S3BucketMainApplications:
+    Description: "S3 Bucket for the main applications"
+    Value: !Ref S3Bucket
+
+  CloudFrontDistributionStaticsId:
+    Description: "The ID of the CloudFront Distribution for Static Content"
+    Value: !Ref CFDistributionForStatics
+
+  CloudFrontDistributionIdEdge:
+    Description: "The ID of the CloudFront Distribution for Edge Content"
+    Value: !Ref CFDistributionForTheEdge

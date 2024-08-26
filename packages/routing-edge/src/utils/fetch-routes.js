@@ -21,8 +21,6 @@ export async function fetchAsJson(url) {
   );
 }
 
-
-
 export async function fetchLocalJSON(route) {
   const url = new URL(route, import.meta.url);
   const file = await readFile(url);

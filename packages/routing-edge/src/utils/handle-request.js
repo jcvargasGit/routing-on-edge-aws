@@ -22,15 +22,16 @@ function isCloudfrontUriInCatalog(cfUri, catalog) {
   if (catalogArray.length > cfUriArray.length) {
     return false;
   }
+
   let i = 0;
   let match = true;
   do {
     if (catalogArray[i] !== cfUriArray[i]) {
       match = false;
-      break;
     }
+    
     i++;
-  } while (i < catalogArray.length || match === false);
+  } while (i < catalogArray.length && match );
   return match;
 }
 
